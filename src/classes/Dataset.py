@@ -37,7 +37,7 @@ class Dataset:
         smiles_list = list(df['smiles'])
         names = list(df['names'])
 
-        descriptor_list = {'nX', 'ATS7se', 'ATS7pe', 'AATS0i', 'ATSC4dv', 'ATSC8dv', 'ATSC0s', 'ATSC6s','ATSC7s',
+        self.descriptor_list = {'nX', 'ATS7se', 'ATS7pe', 'AATS0i', 'ATSC4dv', 'ATSC8dv', 'ATSC0s', 'ATSC6s','ATSC7s',
                         'ATSC8v', 'ATSC7se', 'ATSC6pe', 'ATSC8are', 'AATSC0dv', 'AATSC0v', 'AATSC1v', 'SpDiam_Dzse',
                         'VR2_Dzse', 'VR2_Dzpe', 'VR2_Dzare', 'VR2_Dzi', 'C2SP2', 'Xpc-5dv', 'SssssC', 'MIC1',
                         'PEOE_VSA3', 'PEOE_VSA10', 'SlogP_VSA5', 'EState_VSA10', 'MID_X', 'MPC10', 'TpiPC10', 'nRot'}
@@ -45,27 +45,23 @@ class Dataset:
         dataset = {"name": names, "smiles": smiles_list}
         df_mordred = pd.DataFrame(data=dataset)
         print('Calculating Mordred Descriptors... (may take several hours)')
-        df_mordred = pd.concat([df_mordred, getMordredDescriptors(smiles_list, descriptor_list)], axis=1)
+        df_mordred = pd.concat([df_mordred, getMordredDescriptors(smiles_list, self.descriptor_list)], axis=1)
         self.mordred_dataframe = pl.from_pandas(df_mordred)
         print('Done.')
         
     def print_mordred_dataframe(self):
         print(self.mordred_dataframe)
         
+    def print_descriptor_list(self):
+        print(self.descriptor_list)
         
     def mlinha_predict(self):
-        
-        descriptor_list = {'nX', 'ATS7se', 'ATS7pe', 'AATS0i', 'ATSC4dv', 'ATSC8dv', 'ATSC0s', 'ATSC6s','ATSC7s',
-                   'ATSC8v', 'ATSC7se', 'ATSC6pe', 'ATSC8are', 'AATSC0dv', 'AATSC0v', 'AATSC1v', 'SpDiam_Dzse',
-                   'VR2_Dzse', 'VR2_Dzpe', 'VR2_Dzare', 'VR2_Dzi', 'C2SP2', 'Xpc-5dv', 'SssssC', 'MIC1',
-                   'PEOE_VSA3', 'PEOE_VSA10', 'SlogP_VSA5', 'EState_VSA10', 'MID_X', 'MPC10', 'TpiPC10', 'nRot'}
-
         with open('src/models/ml-models/inhA-Hgb-lr0.05-possion-iter100.pkl', 'rb') as model_file:
             hgb_model = pickle.load(model_file)
             
         df_descritors = self.mordred_dataframe
 
-        X = df_descritors.select(descriptor_list).to_numpy()
+        X = df_descritors.select(self.descriptor_list).to_numpy()
 
         print('scaling features...')
         X_scaled = standardScaler('src/models/scalers/inha-StandardScaler-33.pkl', X)
