@@ -1,7 +1,10 @@
 from rdkit import Chem
 import polars as pl
 import pandas as pd
+import pickle
+from tqdm import tqdm
 
+from src.functions.standardScaler import standardScaler
 from src.functions.getMordredDescriptors import getMordredDescriptors
 from src.functions.standardize import standardize
 from src.functions.readSmiles import readSmiles
@@ -33,7 +36,6 @@ descriptor_list = {'nX', 'ATS7se', 'ATS7pe', 'AATS0i', 'ATSC4dv', 'ATSC8dv', 'AT
                    'VR2_Dzse', 'VR2_Dzpe', 'VR2_Dzare', 'VR2_Dzi', 'C2SP2', 'Xpc-5dv', 'SssssC', 'MIC1',
                    'PEOE_VSA3', 'PEOE_VSA10', 'SlogP_VSA5', 'EState_VSA10', 'MID_X', 'MPC10', 'TpiPC10', 'nRot'}
 
-# getMordredDescriptors
 dataset = {"name": names, "smiles": smiles_list}
 df_mordred = pd.DataFrame(data=dataset)
 print('Calculating Mordred Descriptors... (may take several hours)')
@@ -43,3 +45,34 @@ df_mordred = pl.from_pandas(df_mordred)
 print(df_mordred)
 
 df_mordred.write_parquet('src/dataset/example/best_ligands_mordred.parquet')
+
+print('loading mtb model...')
+with open('src/models/ml-models/inhA-Hgb-lr0.05-possion-iter100.pkl', 'rb') as model_file:
+    model_mtb = pickle.load(model_file)
+    
+print('reading dataset...')
+df = pl.read_parquet('src/dataset/example/best_ligands_mordred.parquet')
+
+print(df)
+
+X = df.select(descriptor_list).to_numpy()
+
+print('scaling features...')
+X_scaled = standardScaler('src/models/scalers/inha-StandardScaler-33.pkl', X)
+
+smiles = df['smiles']
+names = df['name']
+
+print('PREDICTION TIME LETS GOOOO')
+predictions = []
+with tqdm(total=len(X_scaled)) as pbar:
+    for i, descriptors in enumerate(X_scaled):
+        pred = model_mtb.predict([descriptors])
+        predictions.append(pred[0])
+        pbar.update(1)
+
+print('done!')
+
+print('saving as parquet file')
+df_pred = pl.DataFrame(data={'names': names, 'smiles': smiles, 'inhA_predictions': predictions})
+df_pred.write_parquet('src/predictions/best_ligands_mordred_predictions.parquet')
