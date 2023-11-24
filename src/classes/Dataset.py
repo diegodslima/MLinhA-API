@@ -12,9 +12,10 @@ from src.functions.standardScaler import standardScaler
 class Dataset:
     def __init__(self, smiles_file_path):
         self.smiles_file_path = smiles_file_path
-
-    def print_path(self):
-        print("SMILES File Path:", self.smiles_file_path)
+        self.dataframe = None
+        self.mordred_dataframe = None
+        self.descriptor_list = None
+        self.inha_prediction = None
         
     def create_dataframe(self):
         molecules = readSmiles(path=self.smiles_file_path, 
@@ -28,9 +29,6 @@ class Dataset:
         df = pl.DataFrame(data={"names": names, "smiles": standard_smiles})
         self.dataframe = df
         print('dataframe created')
-        
-    def print_dataframe(self):
-        print(self.dataframe)
         
     def calculate_mordred(self):
         df = self.dataframe
@@ -48,12 +46,6 @@ class Dataset:
         df_mordred = pd.concat([df_mordred, getMordredDescriptors(smiles_list, self.descriptor_list)], axis=1)
         self.mordred_dataframe = pl.from_pandas(df_mordred)
         print('Done.')
-        
-    def print_mordred_dataframe(self):
-        print(self.mordred_dataframe)
-        
-    def print_descriptor_list(self):
-        print(self.descriptor_list)
         
     def mlinha_predict(self):
         with open('src/models/ml-models/inhA-Hgb-lr0.05-possion-iter100.pkl', 'rb') as model_file:
@@ -79,8 +71,5 @@ class Dataset:
         pbar.close()
 
         print('Done.')
-        df_pred = pl.DataFrame(data={'names': names, 'smiles': smiles, 'inhA_predictions': predictions})
-        self.prediction_dataframe = df_pred
-        
-    def print_inhA_predictions(self):
-        print(self.prediction_dataframe)
+        df_pred = pl.DataFrame(data={'names': names, 'smiles': smiles, 'inhA_pred': predictions})
+        self.inha_prediction = df_pred
