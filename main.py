@@ -8,4 +8,4 @@ dataset.create_dataframe()
 dataset.calculate_mordred()
 dataset.mlinha_predict()
 
-print(dataset.mordred_dataframe)
+print(dataset.inha_prediction)
