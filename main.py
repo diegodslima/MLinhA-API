@@ -6,7 +6,6 @@ import os
 import uuid
 
 app = FastAPI()
-router = APIRouter()
 
 def custom_openapi():
     if app.openapi_schema:
@@ -29,12 +28,12 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 
-@router.get("/", include_in_schema=False)
+@app.get("/", include_in_schema=False)
 def read_root():
     return {"message": "App running."}
 
 
-@router.post("/inhA_pred", tags=["ML Prediction"])
+@app.post("/inhA_pred", tags=["ML Prediction"])
 async def inha_prediction(file: UploadFile = File(...)):
     try:
         
@@ -59,5 +58,3 @@ async def inha_prediction(file: UploadFile = File(...)):
     
     finally:
         os.remove(file_path)
-        
-app.include_router(router, prefix="/v1")
