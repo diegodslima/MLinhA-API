@@ -1,16 +1,40 @@
 from src.classes.Dataset import Dataset
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, APIRouter, File, UploadFile
+from fastapi.openapi.utils import get_openapi
 import json
 import os
 import uuid
 
 app = FastAPI()
+router = APIRouter()
 
-@app.get("/")
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="MLinhA API",
+        version="1.0.0",
+        summary="This API provides a cheminformatics service for predicting pIC50 values from molecular structures encoded in Simplified Molecular Input Line Entry System (SMILES) format. \n" + 
+        "Users can upload a file containing SMILES representations of chemical compounds. \n" + 
+        "The API then utilizes Mordred, a Python library for molecular descriptor calculation, to generate a set of molecular descriptors for each compound. \n" + 
+        "Subsequently, a pre-trained machine learning model is employed to predict the pIC50 values based on the extracted molecular features.",
+        description="",
+        routes=app.routes,
+    )
+
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi
+
+
+@router.get("/", include_in_schema=False)
 def read_root():
     return {"message": "App running."}
 
-@app.post("/inhA_pred")
+
+@router.post("/inhA_pred", tags=["ML Prediction"])
 async def inha_prediction(file: UploadFile = File(...)):
     try:
         
@@ -35,3 +59,5 @@ async def inha_prediction(file: UploadFile = File(...)):
     
     finally:
         os.remove(file_path)
+        
+app.include_router(router, prefix="/v1")
