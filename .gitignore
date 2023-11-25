@@ -2,3 +2,4 @@
 src/**/__pycache__/
 src/**/*.pyc
 **/*.pyc
+to_do.txt
