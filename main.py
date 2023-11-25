@@ -1,6 +1,5 @@
 from src.classes.Dataset import Dataset
         
-# Example Usage:
 smiles_path = "src/dataset/example/best_ligands.smi"
 dataset = Dataset(smiles_path)
 

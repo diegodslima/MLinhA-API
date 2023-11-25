@@ -3,13 +3,11 @@ import polars as pl
 import pickle
 from tqdm import tqdm
 from rdkit import Chem
-from src.functions.convertDtypes import convert_dtypes
-from src.functions.fixWrongTypeFeatures import fixWrongTypeFeatures
+from src.functions.convertDtypes import convertDtypes
 from src.functions.splitIntFromFloat import splitIntFromFloat
 from src.functions.standardize import standardize
 from src.functions.readSmiles import readSmiles
 from src.functions.getMordredDescriptors import getMordredDescriptors
-from src.functions.standardScaler import standardScaler
 
 
 class Dataset:
@@ -53,26 +51,17 @@ class Dataset:
         print('Done.')
         
     def mlinha_predict(self):
-        # load model
         with open('src/models/ml-models/mlp_inha_model.pkl', 'rb') as model_file:
             mlp_model = pickle.load(model_file)
             
         df_features = self.mordred_dataframe.to_pandas().iloc[:, 2:]       
-           
-        # fix wrong types
-        df_features = convert_dtypes(df_features)
-        print(df_features.dtypes)
+        df_features = convertDtypes(df_features)
             
-        # split int from float
         float_features, int_features = splitIntFromFloat(df_features)
         
         df_float = df_features[float_features]
         df_int = df_features[int_features]
         
-        print(df_float)
-        print(df_int)
-        
-        # load scaler
         with open('src/models/scalers/std-scaler-inhA-small-nov23.pkl', 'rb') as model_file:
             std_scaler = pickle.load(model_file)
             
@@ -86,9 +75,7 @@ class Dataset:
                                        columns=df_int.columns)
         
         df_all_features = pd.concat([df_float_scaled, df_int_scaled], axis=1)
-        
         X_scaled = df_all_features.values
-        print(X_scaled.shape)
 
         smiles = self.mordred_dataframe['smiles']
         names = self.mordred_dataframe['name']
