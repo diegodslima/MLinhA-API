@@ -3,10 +3,11 @@ import polars as pl
 import pickle
 from tqdm import tqdm
 from rdkit import Chem
+from src.functions.convertDtypes import convertDtypes
+from src.functions.splitIntFromFloat import splitIntFromFloat
 from src.functions.standardize import standardize
 from src.functions.readSmiles import readSmiles
 from src.functions.getMordredDescriptors import getMordredDescriptors
-from src.functions.standardScaler import standardScaler
 
 
 class Dataset:
@@ -35,10 +36,12 @@ class Dataset:
         smiles_list = list(df['smiles'])
         names = list(df['names'])
 
-        self.descriptor_list = {'nX', 'ATS7se', 'ATS7pe', 'AATS0i', 'ATSC4dv', 'ATSC8dv', 'ATSC0s', 'ATSC6s','ATSC7s',
-                        'ATSC8v', 'ATSC7se', 'ATSC6pe', 'ATSC8are', 'AATSC0dv', 'AATSC0v', 'AATSC1v', 'SpDiam_Dzse',
-                        'VR2_Dzse', 'VR2_Dzpe', 'VR2_Dzare', 'VR2_Dzi', 'C2SP2', 'Xpc-5dv', 'SssssC', 'MIC1',
-                        'PEOE_VSA3', 'PEOE_VSA10', 'SlogP_VSA5', 'EState_VSA10', 'MID_X', 'MPC10', 'TpiPC10', 'nRot'}
+        self.descriptor_list = {
+            'AATS6m', 'ATSC1dv', 'SssCH2', 'SsssCH', 'SaasN', 'SdO', 'PEOE_VSA1',
+             'SMR_VSA3', 'SlogP_VSA5', 'EState_VSA8', 'VSA_EState2', 'MID_N',
+             'TopoPSA(NO)', 'TopoPSA', 'GGI4', 'SRW07', 'SRW09', 'TSRW10',
+             'nAromAtom', 'nAromBond', 'nBondsA', 'C1SP2', 'n5aRing', 'n5aHRing'
+            }
 
         dataset = {"name": names, "smiles": smiles_list}
         df_mordred = pd.DataFrame(data=dataset)
@@ -48,23 +51,39 @@ class Dataset:
         print('Done.')
         
     def mlinha_predict(self):
-        with open('src/models/ml-models/inhA-Hgb-lr0.05-possion-iter100.pkl', 'rb') as model_file:
-            hgb_model = pickle.load(model_file)
+        with open('src/models/ml-models/mlp_inha_model.pkl', 'rb') as model_file:
+            mlp_model = pickle.load(model_file)
             
-        df_descritors = self.mordred_dataframe
+        df_features = self.mordred_dataframe.to_pandas().iloc[:, 2:]       
+        df_features = convertDtypes(df_features)
+            
+        float_features, int_features = splitIntFromFloat(df_features)
+        
+        df_float = df_features[float_features]
+        df_int = df_features[int_features]
+        
+        with open('src/models/scalers/std-scaler-inhA-small-nov23.pkl', 'rb') as model_file:
+            std_scaler = pickle.load(model_file)
+            
+        with open('src/models/scalers/int-scaler-inhA-small-nov23.pkl', 'rb') as model_file:
+            int_scaler = pickle.load(model_file)
 
-        X = df_descritors.select(self.descriptor_list).to_numpy()
+        df_float_scaled = pd.DataFrame(data=std_scaler.transform(df_float),
+                                       columns=df_float.columns)
+        
+        df_int_scaled = pd.DataFrame(data=int_scaler.transform(df_int),
+                                       columns=df_int.columns)
+        
+        df_all_features = pd.concat([df_float_scaled, df_int_scaled], axis=1)
+        X_scaled = df_all_features.values
 
-        print('scaling features...')
-        X_scaled = standardScaler('src/models/scalers/inha-StandardScaler-33.pkl', X)
-
-        smiles = df_descritors['smiles']
-        names = df_descritors['name']
+        smiles = self.mordred_dataframe['smiles']
+        names = self.mordred_dataframe['name']
         predictions = []
         pbar = tqdm(total=len(X_scaled), desc="Predicting")
 
         for _ , descriptors in enumerate(X_scaled):
-            pred = hgb_model.predict([descriptors])
+            pred = mlp_model.predict([descriptors])
             predictions.append(pred[0])
             pbar.update(1)
 
