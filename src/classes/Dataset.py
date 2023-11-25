@@ -90,5 +90,5 @@ class Dataset:
         pbar.close()
 
         print('Done.')
-        df_pred = pl.DataFrame(data={'names': names, 'smiles': smiles, 'inhA_pred': predictions})
+        df_pred = pl.DataFrame(data={'name': names, 'smiles': smiles, 'inhA_pred': predictions})
         self.inha_prediction = df_pred
