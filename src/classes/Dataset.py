@@ -8,18 +8,22 @@ from src.functions.splitIntFromFloat import splitIntFromFloat
 from src.functions.standardize import standardize
 from src.functions.readSmiles import readSmiles
 from src.functions.getMordredDescriptors import getMordredDescriptors
+from src.functions.rewriteSmilesFile import rewriteSmilesFile
 
 
 class Dataset:
-    def __init__(self, smiles_file_path):
-        self.smiles_file_path = smiles_file_path
+    def __init__(self, smiles_filename):
+        self.smiles_filename = smiles_filename
         self.dataframe = None
         self.mordred_dataframe = None
         self.descriptor_list = None
         self.inha_prediction = None
         
     def create_dataframe(self):
-        molecules = readSmiles(path=self.smiles_file_path, 
+        rewriteSmilesFile(f"temp/{self.smiles_filename}", 
+                          f"temp/new-{self.smiles_filename}")
+        
+        molecules = readSmiles(path=f"temp/new-{self.smiles_filename}", 
                                delimiter=' ', 
                                titleLine=False)
         
