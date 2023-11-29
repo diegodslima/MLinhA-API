@@ -34,7 +34,7 @@ def read_root():
 
 
 @app.post("/inhA_pred", tags=["ML Prediction"])
-def inha_prediction(file: UploadFile = File(...)):
+async def inha_prediction(file: UploadFile = File(...)):
     try:
         
         unique_id = str(uuid.uuid4())
