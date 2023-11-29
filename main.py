@@ -59,6 +59,13 @@ def inha_prediction(file: UploadFile = File(...)):
         return {"message": "Something went wrong.",
                 "error": e}
     
-    finally:
-        os.remove(f"temp/{new_filename}")
-        os.remove(f"temp/new-{new_filename}")
+    finally: 
+        if os.path.exists(f"temp/{new_filename}"):
+            os.remove(f"temp/{new_filename}")
+        else:
+            print(f"The file {new_filename} does not exist.")
+
+        if os.path.exists(f"temp/new-{new_filename}"):
+            os.remove(f"temp/new-{new_filename}")
+        else:
+            print(f"The file new-{new_filename} does not exist.")
