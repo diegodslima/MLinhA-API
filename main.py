@@ -47,11 +47,18 @@ def inha_prediction(file: UploadFile = File(...)):
         dataset = Dataset(new_filename)
         dataset.create_dataframe()
         dataset.calculate_mordred()
+        print('Predicting...')
         dataset.mlinha_predict()
-        
+
         parsed_data = json.loads(dataset.inha_prediction.write_json(row_oriented=True))
-        
-        return parsed_data
+        return {"num_mols": dataset.inha_prediction.shape[0],
+                "results": parsed_data}
+    
+    except Exception as e:
+        print(e)
+        return {"message": "Something went wrong.",
+                "error": e}
     
     finally:
         os.remove(f"temp/{new_filename}")
+        os.remove(f"temp/new-{new_filename}")
