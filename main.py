@@ -35,12 +35,13 @@ def read_root():
 
 @app.post("/inhA_pred", tags=["ML Prediction"])
 async def inha_prediction(file: UploadFile = File(...)):
+    current_directory = os.getcwd()
+    print(current_directory)
     try:
         
         unique_id = str(uuid.uuid4())
         file_extension = os.path.splitext(file.filename)[1]
         new_filename = f"{unique_id}{file_extension}"
-        
         with open(f"temp/{new_filename}", "wb") as f:
             f.write(file.file.read())
 
