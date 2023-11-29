@@ -20,10 +20,10 @@ class Dataset:
         self.inha_prediction = None
         
     def create_dataframe(self):
-        rewriteSmilesFile(f"temp/{self.smiles_filename}", 
-                          f"temp/new-{self.smiles_filename}")
+        rewriteSmilesFile(f"src/temp/{self.smiles_filename}", 
+                          f"src/temp/new-{self.smiles_filename}")
         
-        molecules = readSmiles(path=f"temp/new-{self.smiles_filename}", 
+        molecules = readSmiles(path=f"src/temp/new-{self.smiles_filename}", 
                                delimiter=' ', 
                                titleLine=False)
         
