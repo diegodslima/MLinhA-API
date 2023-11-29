@@ -37,13 +37,12 @@ def read_root():
 async def inha_prediction(file: UploadFile = File(...)):
     
     current_directory = os.getcwd()
-    files_and_folders = os.listdir(current_directory)
-
     temp_directory = f"{current_directory}/temp/"
 
     if not os.path.exists(temp_directory):
         os.makedirs(temp_directory)
 
+    files_and_folders = os.listdir(current_directory)
     for item in files_and_folders:
         print(item)
     
@@ -81,6 +80,6 @@ async def inha_prediction(file: UploadFile = File(...)):
             print(f"The file {temp_directory}/{new_filename} does not exist.")
 
         if os.path.exists(f"{temp_directory}/new-{new_filename}"):
-            os.remove(f"{temp_directory}temp/new-{new_filename}")
+            os.remove(f"{temp_directory}/new-{new_filename}")
         else:
             print(f"The file {temp_directory}/new-{new_filename} does not exist.")
