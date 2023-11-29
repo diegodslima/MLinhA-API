@@ -35,14 +35,12 @@ def read_root():
 
 @app.post("/inhA_pred", tags=["ML Prediction"])
 async def inha_prediction(file: UploadFile = File(...)):
-    print(file.filename)
+    
     current_directory = os.getcwd()
-    print(current_directory)
-    temp_directory = f"{current_directory}/temp/"
-    if os.path.exists(temp_directory):
-        print(temp_directory + ' exists')
-    else:
-        print(temp_directory + ' dont exist')
+    files_and_folders = os.listdir(current_directory)
+    for item in files_and_folders:
+        print(item)
+    
     try:
         
         unique_id = str(uuid.uuid4())
