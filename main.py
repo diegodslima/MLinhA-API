@@ -38,6 +38,12 @@ async def inha_prediction(file: UploadFile = File(...)):
     
     current_directory = os.getcwd()
     files_and_folders = os.listdir(current_directory)
+
+    temp_directory = f"{current_directory}/temp/"
+
+    if not os.path.exists(temp_directory):
+        os.makedirs(temp_directory)
+
     for item in files_and_folders:
         print(item)
     
@@ -46,12 +52,13 @@ async def inha_prediction(file: UploadFile = File(...)):
         unique_id = str(uuid.uuid4())
         file_extension = os.path.splitext(file.filename)[1]
         new_filename = f"{unique_id}{file_extension}"
-        print("writing " + new_filename)
-        current_directory = os.getcwd()
-        with open(f"{current_directory}/temp/{new_filename}", "wb") as f:
+        
+        
+        with open(f"{temp_directory}/{new_filename}", "wb") as f:
             f.write(file.file.read())
 
         print("wrote " + new_filename)
+        
         dataset = Dataset(new_filename)
         dataset.create_dataframe()
         dataset.calculate_mordred()
@@ -68,12 +75,12 @@ async def inha_prediction(file: UploadFile = File(...)):
                 "error": e}
     
     finally: 
-        if os.path.exists(f"{current_directory}/temp/{new_filename}"):
-            os.remove(f"{current_directory}/temp/{new_filename}")
+        if os.path.exists(f"{temp_directory}/{new_filename}"):
+            os.remove(f"{temp_directory}/{new_filename}")
         else:
-            print(f"The file {current_directory}/{new_filename} does not exist.")
+            print(f"The file {temp_directory}/{new_filename} does not exist.")
 
-        if os.path.exists(f"{current_directory}/temp/new-{new_filename}"):
-            os.remove(f"{current_directory}temp/new-{new_filename}")
+        if os.path.exists(f"{temp_directory}/new-{new_filename}"):
+            os.remove(f"{temp_directory}temp/new-{new_filename}")
         else:
-            print(f"The file {current_directory}/new-{new_filename} does not exist.")
+            print(f"The file {temp_directory}/new-{new_filename} does not exist.")

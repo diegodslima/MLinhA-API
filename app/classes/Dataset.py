@@ -1,6 +1,7 @@
 import pandas as pd
 import polars as pl
 import pickle
+import os
 from rdkit import Chem
 from app.functions.removeMissingRows import removeMissingRows
 from app.functions.convertDtypes import convertDtypes
@@ -21,10 +22,14 @@ class Dataset:
         
     def create_dataframe(self):
         print(self.smiles_filename)
-        rewriteSmilesFile(f"temp/{self.smiles_filename}", 
-                          f"temp/new-{self.smiles_filename}")
         
-        molecules = readSmiles(path=f"temp/new-{self.smiles_filename}", 
+        current_directory = os.getcwd()
+        temp_directory = f"{current_directory}/temp/"
+        
+        rewriteSmilesFile(f"{temp_directory}/{self.smiles_filename}", 
+                          f"{temp_directory}/new-{self.smiles_filename}")
+        
+        molecules = readSmiles(path=f"{temp_directory}/new-{self.smiles_filename}", 
                                delimiter=' ', 
                                titleLine=False)
         
