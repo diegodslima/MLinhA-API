@@ -33,7 +33,7 @@ class Dataset:
 
         df = pl.DataFrame(data={"names": names, "smiles": standard_smiles})
         self.dataframe = df
-        print('dataframe created')
+        print('Dataframe created.')
         
     def calculate_mordred(self):
         df = self.dataframe
