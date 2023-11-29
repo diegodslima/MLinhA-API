@@ -60,5 +60,5 @@ def inha_prediction(file: UploadFile = File(...)):
                 "error": e}
     
     finally:
-        os.remove(f"./src/temp/{new_filename}")
-        os.remove(f"./src/temp/new-{new_filename}")
+        os.remove(f"/opt/render/project/src/temp/{new_filename}")
+        os.remove(f"/opt/render/project/src/temp/new-{new_filename}")
