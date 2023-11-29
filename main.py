@@ -38,12 +38,16 @@ async def inha_prediction(file: UploadFile = File(...)):
     print(file.filename)
     current_directory = os.getcwd()
     print(current_directory)
+    temp_directory = f"{current_directory}/temp/"
+    if os.path.exists(temp_directory):
+        print(temp_directory + ' exists')
     try:
         
         unique_id = str(uuid.uuid4())
         file_extension = os.path.splitext(file.filename)[1]
         new_filename = f"{unique_id}{file_extension}"
         print("writing " + new_filename)
+        current_directory = os.getcwd()
         with open(f"{current_directory}/temp/{new_filename}", "wb") as f:
             f.write(file.file.read())
 
