@@ -41,7 +41,7 @@ def inha_prediction(file: UploadFile = File(...)):
         file_extension = os.path.splitext(file.filename)[1]
         new_filename = f"{unique_id}{file_extension}"
         
-        with open(f"/temp/{new_filename}", "wb") as f:
+        with open(f"app/temp/{new_filename}", "wb") as f:
             f.write(file.file.read())
 
         dataset = Dataset(new_filename)
