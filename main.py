@@ -43,9 +43,11 @@ async def inha_prediction(file: UploadFile = File(...)):
         unique_id = str(uuid.uuid4())
         file_extension = os.path.splitext(file.filename)[1]
         new_filename = f"{unique_id}{file_extension}"
+        print("writing " + new_filename)
         with open(f"{current_directory}/temp/{new_filename}", "wb") as f:
             f.write(file.file.read())
 
+        print("wrote " + new_filename)
         dataset = Dataset(new_filename)
         dataset.create_dataframe()
         dataset.calculate_mordred()
