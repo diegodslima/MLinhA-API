@@ -20,10 +20,10 @@ class Dataset:
         self.inha_prediction = None
         
     def create_dataframe(self):
-        rewriteSmilesFile(f"/opt/render/project/src/temp/{self.smiles_filename}", 
-                          f"/opt/render/project/src/temp/new-{self.smiles_filename}")
+        rewriteSmilesFile(f"src/temp/{self.smiles_filename}", 
+                          f"src/temp/new-{self.smiles_filename}")
         
-        molecules = readSmiles(path=f"/opt/render/project/src/temp/new-{self.smiles_filename}", 
+        molecules = readSmiles(path=f"src/temp/new-{self.smiles_filename}", 
                                delimiter=' ', 
                                titleLine=False)
         
@@ -59,7 +59,7 @@ class Dataset:
         print('Mordred descriptors calculated.')
         
     def mlinha_predict(self):
-        with open('/opt/render/project/src/models/ml-models/mlp_inha_model.pkl', 'rb') as model_file:
+        with open('src/models/ml-models/mlp_inha_model.pkl', 'rb') as model_file:
             mlp_model = pickle.load(model_file)
             
         df_features = self.mordred_dataframe.to_pandas().iloc[:, 2:]       
@@ -70,10 +70,10 @@ class Dataset:
         df_float = df_features[float_features]
         df_int = df_features[int_features]
         
-        with open('/opt/render/project/src/models/scalers/std-scaler-inhA-small-nov23.pkl', 'rb') as model_file:
+        with open('src/models/scalers/std-scaler-inhA-small-nov23.pkl', 'rb') as model_file:
             std_scaler = pickle.load(model_file)
             
-        with open('/opt/render/project/src/models/scalers/int-scaler-inhA-small-nov23.pkl', 'rb') as model_file:
+        with open('src/models/scalers/int-scaler-inhA-small-nov23.pkl', 'rb') as model_file:
             int_scaler = pickle.load(model_file)
 
         df_float_scaled = pd.DataFrame(data=std_scaler.transform(df_float),
