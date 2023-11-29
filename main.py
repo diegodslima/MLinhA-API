@@ -1,4 +1,4 @@
-from src.classes.Dataset import Dataset
+from app.classes.Dataset import Dataset
 from fastapi import FastAPI, APIRouter, File, UploadFile
 from fastapi.openapi.utils import get_openapi
 import json
@@ -41,7 +41,7 @@ def inha_prediction(file: UploadFile = File(...)):
         file_extension = os.path.splitext(file.filename)[1]
         new_filename = f"{unique_id}{file_extension}"
         
-        with open(f"src/temp/{new_filename}", "wb") as f:
+        with open(f"/temp/{new_filename}", "wb") as f:
             f.write(file.file.read())
 
         dataset = Dataset(new_filename)
@@ -60,5 +60,5 @@ def inha_prediction(file: UploadFile = File(...)):
                 "error": e}
     
     finally:
-        os.remove(f"src/temp/{new_filename}")
-        os.remove(f"src/temp/new-{new_filename}")
+        os.remove(f"app/temp/{new_filename}")
+        os.remove(f"app/temp/new-{new_filename}")

@@ -2,13 +2,13 @@ import pandas as pd
 import polars as pl
 import pickle
 from rdkit import Chem
-from src.functions.removeMissingRows import removeMissingRows
-from src.functions.convertDtypes import convertDtypes
-from src.functions.splitIntFromFloat import splitIntFromFloat
-from src.functions.standardize import standardize
-from src.functions.readSmiles import readSmiles
-from src.functions.getMordredDescriptors import getMordredDescriptors
-from src.functions.rewriteSmilesFile import rewriteSmilesFile
+from app.functions.removeMissingRows import removeMissingRows
+from app.functions.convertDtypes import convertDtypes
+from app.functions.splitIntFromFloat import splitIntFromFloat
+from app.functions.standardize import standardize
+from app.functions.readSmiles import readSmiles
+from app.functions.getMordredDescriptors import getMordredDescriptors
+from app.functions.rewriteSmilesFile import rewriteSmilesFile
 
 
 class Dataset:
@@ -20,10 +20,10 @@ class Dataset:
         self.inha_prediction = None
         
     def create_dataframe(self):
-        rewriteSmilesFile(f"src/temp/{self.smiles_filename}", 
-                          f"src/temp/new-{self.smiles_filename}")
+        rewriteSmilesFile(f"app/temp/{self.smiles_filename}", 
+                          f"app/temp/new-{self.smiles_filename}")
         
-        molecules = readSmiles(path=f"src/temp/new-{self.smiles_filename}", 
+        molecules = readSmiles(path=f"app/temp/new-{self.smiles_filename}", 
                                delimiter=' ', 
                                titleLine=False)
         
@@ -59,7 +59,7 @@ class Dataset:
         print('Mordred descriptors calculated.')
         
     def mlinha_predict(self):
-        with open('src/models/ml-models/mlp_inha_model.pkl', 'rb') as model_file:
+        with open('app/models/ml-models/mlp_inha_model.pkl', 'rb') as model_file:
             mlp_model = pickle.load(model_file)
             
         df_features = self.mordred_dataframe.to_pandas().iloc[:, 2:]       
@@ -70,10 +70,10 @@ class Dataset:
         df_float = df_features[float_features]
         df_int = df_features[int_features]
         
-        with open('src/models/scalers/std-scaler-inhA-small-nov23.pkl', 'rb') as model_file:
+        with open('app/models/scalers/std-scaler-inhA-small-nov23.pkl', 'rb') as model_file:
             std_scaler = pickle.load(model_file)
             
-        with open('src/models/scalers/int-scaler-inhA-small-nov23.pkl', 'rb') as model_file:
+        with open('app/models/scalers/int-scaler-inhA-small-nov23.pkl', 'rb') as model_file:
             int_scaler = pickle.load(model_file)
 
         df_float_scaled = pd.DataFrame(data=std_scaler.transform(df_float),

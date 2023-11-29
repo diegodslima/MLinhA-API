@@ -1,5 +1,5 @@
 .venv
-src/**/__pycache__/
-src/**/*.pyc
+app/**/__pycache__/
+app/**/*.pyc
 **/*.pyc
 to_do.txt
