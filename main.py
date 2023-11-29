@@ -42,7 +42,7 @@ async def inha_prediction(file: UploadFile = File(...)):
         unique_id = str(uuid.uuid4())
         file_extension = os.path.splitext(file.filename)[1]
         new_filename = f"{unique_id}{file_extension}"
-        with open(f"temp/{new_filename}", "wb") as f:
+        with open(f"{current_directory}/temp/{new_filename}", "wb") as f:
             f.write(file.file.read())
 
         dataset = Dataset(new_filename)
@@ -61,12 +61,12 @@ async def inha_prediction(file: UploadFile = File(...)):
                 "error": e}
     
     finally: 
-        if os.path.exists(f"temp/{new_filename}"):
-            os.remove(f"temp/{new_filename}")
+        if os.path.exists(f"{current_directory}/temp/{new_filename}"):
+            os.remove(f"{current_directory}/temp/{new_filename}")
         else:
-            print(f"The file {new_filename} does not exist.")
+            print(f"The file {current_directory}/{new_filename} does not exist.")
 
-        if os.path.exists(f"temp/new-{new_filename}"):
-            os.remove(f"temp/new-{new_filename}")
+        if os.path.exists(f"{current_directory}/temp/new-{new_filename}"):
+            os.remove(f"{current_directory}temp/new-{new_filename}")
         else:
-            print(f"The file new-{new_filename} does not exist.")
+            print(f"The file {current_directory}/new-{new_filename} does not exist.")
