@@ -35,7 +35,7 @@ def read_root():
 
 @app.post("/inhA_pred", tags=["ML Prediction"])
 async def inha_prediction(file: UploadFile = File(...)):
-    print(file)
+    print(file.filename)
     current_directory = os.getcwd()
     print(current_directory)
     try:

@@ -20,6 +20,7 @@ class Dataset:
         self.inha_prediction = None
         
     def create_dataframe(self):
+        print(self.smiles_filename)
         rewriteSmilesFile(f"temp/{self.smiles_filename}", 
                           f"temp/new-{self.smiles_filename}")
         
