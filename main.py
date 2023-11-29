@@ -41,6 +41,8 @@ async def inha_prediction(file: UploadFile = File(...)):
     temp_directory = f"{current_directory}/temp/"
     if os.path.exists(temp_directory):
         print(temp_directory + ' exists')
+    else:
+        print(temp_directory + ' dont exist')
     try:
         
         unique_id = str(uuid.uuid4())
