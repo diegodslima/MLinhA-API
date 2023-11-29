@@ -1,25 +1,29 @@
 import pandas as pd
 import polars as pl
 import pickle
-from tqdm import tqdm
 from rdkit import Chem
+from src.functions.removeMissingRows import removeMissingRows
 from src.functions.convertDtypes import convertDtypes
 from src.functions.splitIntFromFloat import splitIntFromFloat
 from src.functions.standardize import standardize
 from src.functions.readSmiles import readSmiles
 from src.functions.getMordredDescriptors import getMordredDescriptors
+from src.functions.rewriteSmilesFile import rewriteSmilesFile
 
 
 class Dataset:
-    def __init__(self, smiles_file_path):
-        self.smiles_file_path = smiles_file_path
+    def __init__(self, smiles_filename):
+        self.smiles_filename = smiles_filename
         self.dataframe = None
         self.mordred_dataframe = None
         self.descriptor_list = None
         self.inha_prediction = None
         
     def create_dataframe(self):
-        molecules = readSmiles(path=self.smiles_file_path, 
+        rewriteSmilesFile(f"temp/{self.smiles_filename}", 
+                          f"temp/new-{self.smiles_filename}")
+        
+        molecules = readSmiles(path=f"temp/new-{self.smiles_filename}", 
                                delimiter=' ', 
                                titleLine=False)
         
@@ -46,9 +50,13 @@ class Dataset:
         dataset = {"name": names, "smiles": smiles_list}
         df_mordred = pd.DataFrame(data=dataset)
         print('Calculating Mordred Descriptors... (may take several hours)')
-        df_mordred = pd.concat([df_mordred, getMordredDescriptors(smiles_list, self.descriptor_list)], axis=1)
+        df_mordred = pd.concat([df_mordred, getMordredDescriptors(smiles_list, 
+                                                                  self.descriptor_list)], axis=1)
+
+        df_mordred = removeMissingRows(df_mordred)
+        
         self.mordred_dataframe = pl.from_pandas(df_mordred)
-        print('Done.')
+        print('Mordred descriptors calculated.')
         
     def mlinha_predict(self):
         with open('src/models/ml-models/mlp_inha_model.pkl', 'rb') as model_file:
@@ -75,20 +83,11 @@ class Dataset:
                                        columns=df_int.columns)
         
         df_all_features = pd.concat([df_float_scaled, df_int_scaled], axis=1)
-        X_scaled = df_all_features.values
 
         smiles = self.mordred_dataframe['smiles']
-        names = self.mordred_dataframe['name']
-        predictions = []
-        pbar = tqdm(total=len(X_scaled), desc="Predicting")
-
-        for _ , descriptors in enumerate(X_scaled):
-            pred = mlp_model.predict([descriptors])
-            predictions.append(pred[0])
-            pbar.update(1)
-
-        pbar.close()
+        names = self.mordred_dataframe['name']    
+        predictions = mlp_model.predict(df_all_features)
 
         print('Done.')
-        df_pred = pl.DataFrame(data={'names': names, 'smiles': smiles, 'inhA_pred': predictions})
+        df_pred = pl.DataFrame(data={'name': names, 'smiles': smiles, 'inhA_pred_pIC50': predictions})
         self.inha_prediction = df_pred
