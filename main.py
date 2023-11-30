@@ -4,6 +4,8 @@ from fastapi.openapi.utils import get_openapi
 import json
 import os
 import uuid
+from pathlib import Path
+import logging
 
 app = FastAPI()
 
@@ -33,47 +35,38 @@ def read_root():
 
 @app.post("/inhA_pred", tags=["ML Prediction"])
 async def inha_prediction(file: UploadFile = File(...)):
-    
-    current_directory = os.getcwd()
-    temp_directory = f"{current_directory}/temp/"
+    current_directory = Path.cwd()
+    temp_directory = current_directory / "temp"
 
-    if not os.path.exists(temp_directory):
-        os.makedirs(temp_directory)
+    if not temp_directory.exists():
+        temp_directory.mkdir()
 
     try:
-        
         unique_id = str(uuid.uuid4())
         file_extension = os.path.splitext(file.filename)[1]
         new_filename = f"{unique_id}{file_extension}"
-        
-        
-        with open(f"{temp_directory}/{new_filename}", "wb") as f:
+
+        with open(temp_directory / new_filename, "wb") as f:
             f.write(file.file.read())
-        
+
         dataset = Dataset(new_filename)
         dataset.create_dataframe()
         dataset.calculate_mordred()
         dataset.mlinha_predict()
 
         parsed_data = json.loads(dataset.inha_prediction.write_json(row_oriented=True))
-        return {"num_mols": dataset.inha_prediction.shape[0],
-                "results": parsed_data}
-    
-    except Exception as e:
-        print(e)
-        return {"message": "Something went wrong.",
-                "error": e}
-    
-    finally: 
-        if os.path.exists(f"{temp_directory}/{new_filename}"):
-            os.remove(f"{temp_directory}/{new_filename}")
-        else:
-            print(f"The file {temp_directory}/{new_filename} does not exist.")
+        return {"num_mols": dataset.inha_prediction.shape[0], "results": parsed_data}
 
-        if os.path.exists(f"{temp_directory}/new-{new_filename}"):
-            os.remove(f"{temp_directory}/new-{new_filename}")
-        else:
-            print(f"The file {temp_directory}/new-{new_filename} does not exist.")
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        return {"message": "Something went wrong.", "error": str(e)}
+
+    finally:
+        try:
+            (temp_directory / new_filename).unlink()
+        except FileNotFoundError:
+            pass
+
 
 @app.post("/mtb_pred", tags=["In Development"])
 async def mtb_prediction():
