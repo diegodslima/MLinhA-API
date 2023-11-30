@@ -1,7 +1,7 @@
+from pathlib import Path
 import pandas as pd
 import polars as pl
 import pickle
-import os
 from rdkit import Chem
 from app.functions.removeMissingRows import removeMissingRows
 from app.functions.convertDtypes import convertDtypes
@@ -11,18 +11,21 @@ from app.functions.readSmiles import readSmiles
 from app.functions.getMordredDescriptors import getMordredDescriptors
 from app.functions.rewriteSmilesFile import rewriteSmilesFile
 
-
 class Dataset:
+    MLP_MODEL_PATH = 'app/models/ml-models/mlp_inha_model.pkl'
+    STD_SCALER_PATH = 'app/models/scalers/std-scaler-inhA-small-nov23.pkl'
+    INT_SCALER_PATH = 'app/models/scalers/int-scaler-inhA-small-nov23.pkl'
+
     def __init__(self, smiles_filename):
         self.smiles_filename = smiles_filename
         self.dataframe = None
         self.mordred_dataframe = None
         self.descriptor_list = None
         self.inha_prediction = None
-        
+
     def create_dataframe(self):       
-        current_directory = os.getcwd()
-        temp_directory = f"{current_directory}/temp/"
+        current_directory = Path.cwd()
+        temp_directory = current_directory / "temp"
         
         rewriteSmilesFile(f"{temp_directory}/{self.smiles_filename}", 
                           f"{temp_directory}/new-{self.smiles_filename}")
@@ -37,8 +40,7 @@ class Dataset:
 
         df = pl.DataFrame(data={"names": names, "smiles": standard_smiles})
         self.dataframe = df
-        print('Dataframe created.')
-        
+
     def calculate_mordred(self):
         df = self.dataframe
         smiles_list = list(df['smiles'])
@@ -53,17 +55,15 @@ class Dataset:
 
         dataset = {"name": names, "smiles": smiles_list}
         df_mordred = pd.DataFrame(data=dataset)
-        print('Calculating Mordred Descriptors...')
+
         df_mordred = pd.concat([df_mordred, getMordredDescriptors(smiles_list, 
                                                                   self.descriptor_list)], axis=1)
 
         df_mordred = removeMissingRows(df_mordred)
-        
         self.mordred_dataframe = pl.from_pandas(df_mordred)
-        print('Mordred descriptors calculated.')
-        
+
     def mlinha_predict(self):
-        with open('app/models/ml-models/mlp_inha_model.pkl', 'rb') as model_file:
+        with open(self.MLP_MODEL_PATH, 'rb') as model_file:
             mlp_model = pickle.load(model_file)
             
         df_features = self.mordred_dataframe.to_pandas().iloc[:, 2:]       
@@ -74,10 +74,10 @@ class Dataset:
         df_float = df_features[float_features]
         df_int = df_features[int_features]
         
-        with open('app/models/scalers/std-scaler-inhA-small-nov23.pkl', 'rb') as model_file:
+        with open(self.STD_SCALER_PATH, 'rb') as model_file:
             std_scaler = pickle.load(model_file)
             
-        with open('app/models/scalers/int-scaler-inhA-small-nov23.pkl', 'rb') as model_file:
+        with open(self.INT_SCALER_PATH, 'rb') as model_file:
             int_scaler = pickle.load(model_file)
 
         df_float_scaled = pd.DataFrame(data=std_scaler.transform(df_float),
@@ -92,6 +92,5 @@ class Dataset:
         names = self.mordred_dataframe['name']    
         predictions = mlp_model.predict(df_all_features)
 
-        print('Done.')
         df_pred = pl.DataFrame(data={'name': names, 'smiles': smiles, 'inhA_pred_pIC50': predictions})
         self.inha_prediction = df_pred
