@@ -28,7 +28,7 @@ def custom_openapi():
 
 app.openapi = custom_openapi
         
-with open("/web/static/index.html", "r") as html_file:
+with open("/web/static/home.html", "r") as html_file:
     html_content = html_file.read()
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
