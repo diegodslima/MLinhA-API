@@ -9,12 +9,7 @@ RDLogger.DisableLog('rdApp.*')
 uncharger = rdMolStandardize.Uncharger()
 
 def standardize(smiles_list):
-    
-    tqdm._instances.clear()
-    
     processed_mols = [None] * len(smiles_list)
-
-    pbar = tqdm(total=len(smiles_list), desc="Standardizing")
 
     for i, smiles in enumerate(smiles_list):
         mol = MolFromSmiles(smiles)
@@ -23,8 +18,5 @@ def standardize(smiles_list):
         uncharged_parent_clean_mol = uncharger.uncharge(parent_clean_mol)
         # taut_uncharged_parent_clean_mol = taut_enum.Canonicalize(uncharged_parent_clean_mol)
         processed_mols[i] = MolToSmiles(uncharged_parent_clean_mol)
-
-        pbar.update(1)
-
-    pbar.close()
+        
     return processed_mols

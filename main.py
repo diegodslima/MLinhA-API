@@ -64,6 +64,7 @@ async def inha_prediction(file: UploadFile = File(...)):
     finally:
         try:
             (temp_directory / new_filename).unlink()
+            (temp_directory / ("new-" + str(new_filename))).unlink()
         except FileNotFoundError:
             pass
 
