@@ -1,6 +1,5 @@
 from app.classes.Dataset import Dataset
-from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, APIRouter, File, UploadFile
 from fastapi.openapi.utils import get_openapi
 import json
 import os
@@ -27,13 +26,12 @@ def custom_openapi():
 
 
 app.openapi = custom_openapi
-        
-with open("/web/static/home.html", "r") as html_file:
-    html_content = html_file.read()
 
-@app.get("/", response_class=HTMLResponse, include_in_schema=False)
-async def read_root():
-    return HTMLResponse(content=html_content)
+
+@app.get("/", include_in_schema=False)
+def read_root():
+    return {"message": "App running."}
+
 
 @app.post("/inhA_pred", tags=["ML Prediction"])
 async def inha_prediction(file: UploadFile = File(...)):
