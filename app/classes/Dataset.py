@@ -20,9 +20,7 @@ class Dataset:
         self.descriptor_list = None
         self.inha_prediction = None
         
-    def create_dataframe(self):
-        print(self.smiles_filename)
-        
+    def create_dataframe(self):       
         current_directory = os.getcwd()
         temp_directory = f"{current_directory}/temp/"
         
@@ -55,7 +53,7 @@ class Dataset:
 
         dataset = {"name": names, "smiles": smiles_list}
         df_mordred = pd.DataFrame(data=dataset)
-        print('Calculating Mordred Descriptors... (may take several hours)')
+        print('Calculating Mordred Descriptors...')
         df_mordred = pd.concat([df_mordred, getMordredDescriptors(smiles_list, 
                                                                   self.descriptor_list)], axis=1)
 

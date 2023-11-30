@@ -1,5 +1,5 @@
 from app.classes.Dataset import Dataset
-from fastapi import FastAPI, APIRouter, File, UploadFile
+from fastapi import FastAPI, HTMLResponse, File, UploadFile
 from fastapi.openapi.utils import get_openapi
 import json
 import os
@@ -26,12 +26,13 @@ def custom_openapi():
 
 
 app.openapi = custom_openapi
+        
+with open("/web/static/index.html", "r") as html_file:
+    html_content = html_file.read()
 
-
-@app.get("/", include_in_schema=False)
-def read_root():
-    return {"message": "App running."}
-
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+async def read_root():
+    return HTMLResponse(content=html_content)
 
 @app.post("/inhA_pred", tags=["ML Prediction"])
 async def inha_prediction(file: UploadFile = File(...)):
@@ -42,10 +43,6 @@ async def inha_prediction(file: UploadFile = File(...)):
     if not os.path.exists(temp_directory):
         os.makedirs(temp_directory)
 
-    files_and_folders = os.listdir(current_directory)
-    for item in files_and_folders:
-        print(item)
-    
     try:
         
         unique_id = str(uuid.uuid4())
@@ -55,13 +52,10 @@ async def inha_prediction(file: UploadFile = File(...)):
         
         with open(f"{temp_directory}/{new_filename}", "wb") as f:
             f.write(file.file.read())
-
-        print("wrote " + new_filename)
         
         dataset = Dataset(new_filename)
         dataset.create_dataframe()
         dataset.calculate_mordred()
-        print('Predicting...')
         dataset.mlinha_predict()
 
         parsed_data = json.loads(dataset.inha_prediction.write_json(row_oriented=True))
