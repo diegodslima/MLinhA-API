@@ -27,11 +27,9 @@ def custom_openapi():
 
 app.openapi = custom_openapi
 
-
 @app.get("/", include_in_schema=False)
 def read_root():
     return {"message": "App running."}
-
 
 @app.post("/inhA_pred", tags=["ML Prediction"])
 async def inha_prediction(file: UploadFile = File(...)):
@@ -76,3 +74,15 @@ async def inha_prediction(file: UploadFile = File(...)):
             os.remove(f"{temp_directory}/new-{new_filename}")
         else:
             print(f"The file {temp_directory}/new-{new_filename} does not exist.")
+
+@app.post("/mtb_pred", tags=["In Development"])
+async def mtb_prediction():
+    return {"message": "Endpoint under construction."}
+
+@app.post("/inhA_KDE", tags=["In Development"])
+async def inha_kde():
+    return {"message": "Endpoint under construction."}
+
+@app.post("/mtb_KDE", tags=["In Development"])
+async def mtb_kde():
+    return {"message": "Endpoint under construction."}
