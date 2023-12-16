@@ -96,9 +96,10 @@ async def mtb_prediction(file: UploadFile = File(...)):
         features = dataset.calculate_fingerprints()
 
         mtb_rf = Model(model_path='app/models/ml-models/mtb_random_forest.pkl')
-        prediction = mtb_rf.model.predict(features)
-        results = dataset.get_results(list(prediction), model_name='mtb')     
-        parsed_data = json.loads(results.to_json())
+        prediction = mtb_rf.model.predict_proba(features)
+        results = dataset.get_results(list(prediction), model_name='mtb')
+        print(results)     
+        parsed_data = json.loads(results.to_json(orient='records'))
         
         return {"num_mols": results.shape[0], "results": parsed_data}
 
