@@ -17,6 +17,8 @@ class Dataset:
     INT_SCALER_PATH = 'app/models/scalers/int-scaler-inhA-small-nov23.pkl'
 
     def __init__(self, smiles_filename):
+        self.X = None
+        self.y = None
         self.smiles_filename = smiles_filename
         self.dataframe = None
         self.mordred_dataframe = None
@@ -62,10 +64,8 @@ class Dataset:
         df_mordred = removeMissingRows(df_mordred)
         self.mordred_dataframe = pl.from_pandas(df_mordred)
 
-    def mlinha_predict(self):
-        with open(self.MLP_MODEL_PATH, 'rb') as model_file:
-            mlp_model = pickle.load(model_file)
-            
+    def inhA_preprocessing(self):
+
         df_features = self.mordred_dataframe.to_pandas().iloc[:, 2:]       
         df_features = convertDtypes(df_features)
             
@@ -87,10 +87,14 @@ class Dataset:
                                        columns=df_int.columns)
         
         df_all_features = pd.concat([df_float_scaled, df_int_scaled], axis=1)
-
-        smiles = self.mordred_dataframe['smiles']
-        names = self.mordred_dataframe['name']    
-        predictions = mlp_model.predict(df_all_features)
-
-        df_pred = pl.DataFrame(data={'name': names, 'smiles': smiles, 'inhA_pred_pIC50': predictions})
-        self.inha_prediction = df_pred
+        self.X = df_all_features.values
+        
+        return df_all_features.values
+    
+    def get_inhA_results(self, predictions):
+        df_pred = pd.DataFrame()
+        df_pred['name'] = self.mordred_dataframe['name']
+        df_pred['smiles'] = self.mordred_dataframe['smiles']
+        df_pred['inha_pIC50_pred'] = predictions
+        
+        return df_pred

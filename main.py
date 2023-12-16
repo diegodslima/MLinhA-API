@@ -1,4 +1,3 @@
-from app.classes.Dataset import Dataset
 from fastapi import FastAPI, APIRouter, File, UploadFile
 from fastapi.openapi.utils import get_openapi
 import json
@@ -6,6 +5,9 @@ import os
 import uuid
 from pathlib import Path
 import logging
+
+from app.classes.Model import Model
+from app.classes.Dataset import Dataset
 
 app = FastAPI()
 
@@ -52,10 +54,14 @@ async def inha_prediction(file: UploadFile = File(...)):
         dataset = Dataset(new_filename)
         dataset.create_dataframe()
         dataset.calculate_mordred()
-        dataset.mlinha_predict()
-
-        parsed_data = json.loads(dataset.inha_prediction.write_json(row_oriented=True))
-        return {"num_mols": dataset.inha_prediction.shape[0], "results": parsed_data}
+        features = dataset.inhA_preprocessing()
+        
+        inha_mlp = Model(model_path='app/models/ml-models/mlp_inha_model.pkl')
+        prediction = inha_mlp.predict(features)
+        results = dataset.get_inhA_results(prediction)
+        
+        parsed_data = json.loads(results.to_json())
+        return {"num_mols": results.shape[0], "results": parsed_data}
 
     except Exception as e:
         logging.error(f"An error occurred: {e}")
