@@ -3,12 +3,14 @@ import pandas as pd
 import polars as pl
 import pickle
 from rdkit import Chem
+from app.functions.bitStringToArray import bitStringToArray
 from app.functions.removeMissingRows import removeMissingRows
 from app.functions.convertDtypes import convertDtypes
 from app.functions.splitIntFromFloat import splitIntFromFloat
 from app.functions.standardize import standardize
 from app.functions.readSmiles import readSmiles
 from app.functions.getMordredDescriptors import getMordredDescriptors
+from app.functions.getMorganFingerprint import getMorganFingerprints
 from app.functions.rewriteSmilesFile import rewriteSmilesFile
 
 class Dataset:
@@ -24,6 +26,7 @@ class Dataset:
         self.mordred_dataframe = None
         self.descriptor_list = None
         self.inha_prediction = None
+        self.fingerprints = None
 
     def create_dataframe(self):       
         current_directory = Path.cwd()
@@ -40,13 +43,22 @@ class Dataset:
         names = [mol.GetProp("_Name") for mol in molecules]
         standard_smiles = standardize(smiles)
 
-        df = pl.DataFrame(data={"names": names, "smiles": standard_smiles})
+        df = pl.DataFrame(data={"name": names, "smiles": standard_smiles})
         self.dataframe = df
+        
+    def calculate_fingerprints(self):
+        df = self.dataframe
+        smiles_list = list(df['smiles'])
+        bitstr = getMorganFingerprints(smiles_list)
+        fps_array = bitStringToArray(bitstr)
+        
+        self.fingerprints = fps_array
+        return fps_array
 
     def calculate_mordred(self):
         df = self.dataframe
         smiles_list = list(df['smiles'])
-        names = list(df['names'])
+        names = list(df['name'])
 
         self.descriptor_list = {
             'AATS6m', 'ATSC1dv', 'SssCH2', 'SsssCH', 'SaasN', 'SdO', 'PEOE_VSA1',
@@ -91,10 +103,10 @@ class Dataset:
         
         return df_all_features.values
     
-    def get_inhA_results(self, predictions):
+    def get_results(self, predictions, model_name):
         df_pred = pd.DataFrame()
-        df_pred['name'] = self.mordred_dataframe['name']
-        df_pred['smiles'] = self.mordred_dataframe['smiles']
-        df_pred['inha_pIC50_pred'] = predictions
+        df_pred['name'] = self.dataframe['name']
+        df_pred['smiles'] = self.dataframe['smiles']
+        df_pred[f'{model_name}_pred'] = predictions
         
         return df_pred

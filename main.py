@@ -57,8 +57,8 @@ async def inha_prediction(file: UploadFile = File(...)):
         features = dataset.inhA_preprocessing()
         
         inha_mlp = Model(model_path='app/models/ml-models/mlp_inha_model.pkl')
-        prediction = inha_mlp.predict(features)
-        results = dataset.get_inhA_results(prediction)
+        prediction = inha_mlp.model.predict(features)
+        results = dataset.get_results(prediction, model_name='inhA')
         
         parsed_data = json.loads(results.to_json())
         return {"num_mols": results.shape[0], "results": parsed_data}
@@ -75,9 +75,43 @@ async def inha_prediction(file: UploadFile = File(...)):
             pass
 
 
-@app.post("/mtb_pred", tags=["In Development"])
-async def mtb_prediction():
-    return {"message": "Endpoint under construction."}
+@app.post("/mtb_pred", tags=["ML Prediction"])
+async def mtb_prediction(file: UploadFile = File(...)):
+    current_directory = Path.cwd()
+    temp_directory = current_directory / "temp"
+
+    if not temp_directory.exists():
+        temp_directory.mkdir()
+
+    try:
+        unique_id = str(uuid.uuid4())
+        file_extension = os.path.splitext(file.filename)[1]
+        new_filename = f"{unique_id}{file_extension}"
+
+        with open(temp_directory / new_filename, "wb") as f:
+            f.write(file.file.read())
+
+        dataset = Dataset(new_filename)
+        dataset.create_dataframe()
+        features = dataset.calculate_fingerprints()
+
+        mtb_rf = Model(model_path='app/models/ml-models/mtb_random_forest.pkl')
+        prediction = mtb_rf.model.predict(features)
+        results = dataset.get_results(list(prediction), model_name='mtb')     
+        parsed_data = json.loads(results.to_json())
+        
+        return {"num_mols": results.shape[0], "results": parsed_data}
+
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        return {"message": "Something went wrong.", "error": str(e)}
+
+    finally:
+        try:
+            (temp_directory / new_filename).unlink()
+            (temp_directory / ("new-" + str(new_filename))).unlink()
+        except FileNotFoundError:
+            pass
 
 @app.post("/inhA_KDE", tags=["In Development"])
 async def inha_kde():
