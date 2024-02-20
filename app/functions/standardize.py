@@ -13,8 +13,8 @@ def standardize(smiles_list):
 
     for i, smiles in enumerate(smiles_list):
         mol = MolFromSmiles(smiles)
-        # clean_mol = rdMolStandardize.Cleanup(mol)
-        parent_clean_mol = rdMolStandardize.FragmentParent(mol)
+        clean_mol = rdMolStandardize.Cleanup(mol)
+        parent_clean_mol = rdMolStandardize.FragmentParent(clean_mol)
         uncharged_parent_clean_mol = uncharger.uncharge(parent_clean_mol)
         # taut_uncharged_parent_clean_mol = taut_enum.Canonicalize(uncharged_parent_clean_mol)
         processed_mols[i] = MolToSmiles(uncharged_parent_clean_mol)
