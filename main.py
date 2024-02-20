@@ -35,6 +35,41 @@ app.openapi = custom_openapi
 def read_root():
     return {"message": "App running."}
 
+@app.post("/descriptors", tags=["Featurizers"])
+async def calc_descriptor(file: UploadFile = File(...)):
+    current_directory = Path.cwd()
+    temp_directory = current_directory / "temp"
+
+    if not temp_directory.exists():
+        temp_directory.mkdir()
+
+    try:
+        unique_id = str(uuid.uuid4())
+        file_extension = os.path.splitext(file.filename)[1]
+        new_filename = f"{unique_id}{file_extension}"
+
+        with open(temp_directory / new_filename, "wb") as f:
+            f.write(file.file.read())
+
+        dataset = Dataset(new_filename)
+        print(dataset)
+        dataset.create_dataframe()
+        df_mordred = dataset.calculate_mordred()
+
+        return df_mordred
+    
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        return {"message": "Something went wrong.", "error": str(e)}
+
+    finally:
+        try:
+            (temp_directory / new_filename).unlink()
+            (temp_directory / ("new-" + str(new_filename))).unlink()
+        except FileNotFoundError:
+            pass
+    
+
 @app.post("/inhA_pred", tags=["ML Prediction"])
 async def inha_prediction(file: UploadFile = File(...)):
     current_directory = Path.cwd()
@@ -53,11 +88,12 @@ async def inha_prediction(file: UploadFile = File(...)):
 
         dataset = Dataset(new_filename)
         dataset.create_dataframe()
-        dataset.calculate_mordred()
-        features = dataset.inhA_preprocessing()
+        features = dataset.calculate_mordred()
+        # features = dataset.inhA_preprocessing()
         
-        inha_mlp = Model(model_path='app/models/ml-models/mlp_inha_model.pkl')
-        prediction = inha_mlp.model.predict(features)
+        inha_svr = Model(model_path='app/models/ml-models/SVR-inhA-mordred.joblib', 
+                         module='joblib')
+        prediction = inha_svr.model.predict(features.iloc[:,2:])
         results = dataset.get_results(prediction, model_name='inhA')
         
         parsed_data = json.loads(results.to_json())
@@ -95,10 +131,12 @@ async def mtb_prediction(file: UploadFile = File(...)):
         dataset.create_dataframe()
         features = dataset.calculate_fingerprints()
 
-        mtb_rf = Model(model_path='app/models/ml-models/mtb_random_forest.pkl')
-        prediction = mtb_rf.model.predict_proba(features)
+        mtb_rf = Model(model_path='app/models/ml-models/mtb-A25-novo-logreg-classifier.pkl')
+        prediction = mtb_rf.model.predict(features)
+        # predict_proba = mtb_rf.model.predict_proba(features)
         results = dataset.get_results(list(prediction), model_name='mtb')
-        print(results)     
+        # results['proba_0'] = [prob[0] for prob in predict_proba]
+        # results['proba_1'] = [prob[1] for prob in predict_proba]
         parsed_data = json.loads(results.to_json(orient='records'))
         
         return {"num_mols": results.shape[0], "results": parsed_data}

@@ -10,7 +10,7 @@ def correctFormat(string1, string2):
     return f"{string1} {string2}"
 
 def rewriteSmilesFile(input_file_path, output_file_path):
-    MAX_LINES = 1000
+    MAX_LINES = 1000000
     with open(input_file_path, 'r') as input_file, open(output_file_path, 'w') as output_file:
         input_lines = input_file.readlines()
         if len(input_lines) > MAX_LINES:
