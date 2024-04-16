@@ -1,5 +1,11 @@
 from fastapi import FastAPI, APIRouter, File, UploadFile
 from fastapi.openapi.utils import get_openapi
+from fastapi.responses import HTMLResponse
+from fastapi.requests import Request
+
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
 import json
 import os
 import uuid
@@ -9,7 +15,16 @@ import logging
 from app.classes.Model import Model
 from app.classes.Dataset import Dataset
 
+
 app = FastAPI()
+
+script_dir = os.path.dirname(__file__)
+st_abs_file_path = os.path.join(script_dir, "app/static/")
+tmlpt_abs_file_path = os.path.join(script_dir, "app/templates/")
+
+app.mount("/static", StaticFiles(directory=st_abs_file_path), name="static")
+templates = Jinja2Templates(directory=tmlpt_abs_file_path)
+
 
 def custom_openapi():
     if app.openapi_schema:
@@ -31,9 +46,13 @@ def custom_openapi():
 
 app.openapi = custom_openapi
 
-@app.get("/", include_in_schema=False)
-def read_root():
-    return {"message": "App running."}
+@app.get("/", include_in_schema=False, response_class=HTMLResponse)
+def root(request: Request):
+    return templates.TemplateResponse("index.html",
+                                      context={
+                                          "request": request,
+                                          "message": "Hello World!!!"
+                                          })
 
 @app.post("/descriptors", tags=["Featurizers"])
 async def calc_descriptor(file: UploadFile = File(...)):
