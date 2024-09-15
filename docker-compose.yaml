@@ -1,23 +1,18 @@
 version: '3'
 
-networks:
-  proxy: 
-    driver: bridge
-
 services:
-  nginx:
-    image: nginx:alpine
-    ports:
-      - 3000:80
-    networks:
-      - proxy
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+  # nginx:
+  #   image: nginx:alpine
+  #   ports:
+  #     - 8080:80
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+  #   depends_on:
+  #     - app
 
-  app1:
-    image: mlinha:latest
-    container_name: mlinha-1
-    volumes:
-      - ./app:/app
-    networks:
-      - proxy
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    ports:
+    - "3000:3000"
