@@ -5,6 +5,7 @@ import os
 import uuid
 from pathlib import Path
 import logging
+import pandas as pd
 
 from app.classes.Model import Model
 from app.classes.Dataset import Dataset
@@ -131,10 +132,16 @@ async def mtb_prediction(file: UploadFile = File(...)):
         dataset.create_dataframe()
         features = dataset.calculate_fingerprints()
 
-        mtb_rf = Model(model_path='app/models/ml-models/mtb-A25-novo-logreg-classifier.pkl')
+        mtb_rf = Model(model_path='app/models/ml-models/mtb-A25-novo-svm-regressor-C5-scale.pkl')
         prediction = mtb_rf.model.predict(features)
         # predict_proba = mtb_rf.model.predict_proba(features)
-        results = dataset.get_results(list(prediction), model_name='mtb')
+        # results = dataset.get_results(list(prediction), model_name='mtb')
+        results = dataset.dataframe.to_pandas()
+        results['prediction'] = prediction
+        print(results)
+
+        # results['name'] = dataset['name']
+        # results['smiles'] = dataset['smiles']
         # results['proba_0'] = [prob[0] for prob in predict_proba]
         # results['proba_1'] = [prob[1] for prob in predict_proba]
         parsed_data = json.loads(results.to_json(orient='records'))

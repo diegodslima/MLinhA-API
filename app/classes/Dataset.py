@@ -119,9 +119,12 @@ class Dataset:
         return df_scaled.values
     
     def get_results(self, predictions, model_name):
-        df_pred = pd.DataFrame()
-        df_pred['name'] = self.mordred_dataframe['name']
-        df_pred['smiles'] = self.mordred_dataframe['smiles']
-        df_pred[f'{model_name}_pred'] = predictions
-        
+        if model_name == 'inhA':
+            df_pred = pd.DataFrame()
+            df_pred['name'] = self.mordred_dataframe['name']
+            df_pred['smiles'] = self.mordred_dataframe['smiles']
+            df_pred[f'{model_name}_pred'] = predictions
+
+        elif model_name == 'mtb':
+            df_pred = pd.DataFrame(data=predictions)
         return df_pred
