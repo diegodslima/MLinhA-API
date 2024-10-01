@@ -97,7 +97,7 @@ async def inha_prediction(file: UploadFile = File(...)):
         prediction = inha_svr.model.predict(features.iloc[:,2:])
         results = dataset.get_results(prediction, model_name='inhA')
         
-        parsed_data = json.loads(results.to_json())
+        parsed_data = json.loads(results.to_json(orient='records'))
         return {"num_mols": results.shape[0], "results": parsed_data}
 
     except Exception as e:
